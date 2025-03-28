@@ -217,7 +217,7 @@ final class OpenIdConnectClient
             throw new \RuntimeException(substr($returnArguments, 6));
         }
         $returnToUri = $returnToUri->withQuery(trim($returnToUri->getQuery() . '&' . OpenIdConnectToken::OIDC_PARAMETER_NAME . '=' . urlencode($returnArguments), '&'));
-        $scope = trim(implode(' ', array_unique(array_merge(explode(' ', $scope), ['openid', 'offline_access']))));
+        $scope = trim(implode(' ', array_unique(array_merge(explode(' ', $scope), ['openid']))));
 
         if (empty($this->options['clientId']) || empty($this->options['clientSecret'])) {
             throw new \RuntimeException(sprintf('OpenID Connect Client: Authorization Code Flow requires "clientId" and "clientSecret" to be configured for service "%s".', $this->serviceName), 1596456168);
