@@ -126,6 +126,20 @@ class IdentityToken
     }
 
     /**
+     * Checks if the identity token's "aud" value contains the given audience
+     *
+     * The "aud" claim may be a single string or an array of strings (RFC 7519, section 4.1.3).
+     */
+    public function audienceContains(string $audience): bool
+    {
+        $audiences = $this->values['aud'] ?? [];
+        if (is_string($audiences)) {
+            $audiences = [$audiences];
+        }
+        return is_array($audiences) && in_array($audience, $audiences, true);
+    }
+
+    /**
      * Verifies a signature for the given payload using the given JSON web key and hash type.
      *
      * @param string $hashType The used hash type, for example SHA256, SHA384 or SHA512

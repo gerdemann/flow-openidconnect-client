@@ -82,4 +82,39 @@ class IdentityTokenTest extends TestCase
         static::assertFalse($identityToken->isExpiredAt(\DateTimeImmutable::createFromFormat('d.m.Y H:i:s', '29.05.2019 09:00:00')));
         static::assertTrue($identityToken->isExpiredAt(\DateTimeImmutable::createFromFormat('d.m.Y H:i:s', '31.05.2019 09:00:00')));
     }
+
+    public static function audiences(): array
+    {
+        return [
+            'single audience, matching' => ['client-a', 'client-a', true],
+            'single audience, not matching' => ['client-b', 'client-a', false],
+            'multiple audiences, matching' => [['client-a', 'client-b'], 'client-b', true],
+            'multiple audiences, not matching' => [['client-a', 'client-b'], 'client-c', false],
+            'empty list of audiences' => [[], 'client-a', false],
+            'numeric audience compared strictly' => [['1e3'], '1000', false],
+            'no audience' => [null, 'client-a', false],
+        ];
+    }
+
+    /**
+     * @test
+     * @dataProvider audiences
+     * @throws
+     */
+    public function audienceContainsSupportsSingleAndMultipleAudiences(string|array|null $audienceClaim, string $audience, bool $expectedResult): void
+    {
+        $values = ['iss' => 'https://id.example.com', 'sub' => 'subject'];
+        if ($audienceClaim !== null) {
+            $values['aud'] = $audienceClaim;
+        }
+        $identityToken = IdentityToken::fromJwt(self::createUnsignedJwt($values));
+
+        static::assertSame($expectedResult, $identityToken->audienceContains($audience));
+    }
+
+    private static function createUnsignedJwt(array $values): string
+    {
+        $encode = static fn (string $data): string => rtrim(strtr(base64_encode($data), '+/', '-_'), '=');
+        return $encode(json_encode(['typ' => 'JWT', 'alg' => 'RS256'])) . '.' . $encode(json_encode($values)) . '.' . $encode('signature');
+    }
 }
